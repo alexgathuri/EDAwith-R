@@ -1,0 +1,335 @@
+---
+title: "week13IP"
+author: "Alex"
+date: "09/07/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+IMPORTING OUR DATASET
+```{r}
+
+library("data.table")
+data <- fread("http://bit.ly/EcommerceCustomersDataset")
+```
+Previewing our data set
+```{r}
+head(data)
+```
+Checking data types
+```{r}
+typeof(data)
+
+```
+
+Checking the data shape of our data set
+```{r}
+nrow(data)
+
+
+ncol(data)
+
+#From our data set, we can see that we have a total of 12330 rows and a total of 18 columns.
+
+```
+Checking for missing values
+```{r}
+
+colSums(is.na(data))
+
+
+
+
+```
+When we check for null values in each column, we can see that there are no missing values in our data set.
+
+Dropping Null values
+```{r}
+data <- na.omit(data)
+```
+
+Checking again for null values
+```{r}
+colSums(is.na(data))
+```
+
+
+Checking for duplicates
+```{r}
+duplicated_rows <- data[duplicated(data),]
+
+duplicated_rows 
+
+
+
+
+```
+From the above code, we can clearly see the output which shows that there are no duplicates in our data set.
+
+
+Checking for Outliers
+```{r}
+#creating a variable with only numeric columns
+library(tidyverse)
+data2 <-data %>% select(1,2,3,4,7,8,9,10,12,13,14,15)
+
+#Previewing outliers for numeric columns using box plots
+boxplot(data2)
+
+```
+We can observe some outliers but they are the actual representation of the data so we will not drop them
+
+
+
+# Exploratory Data Analysis
+
+## Univariate Analysis
+
+
+Finding the mean
+```{r}
+lapply(data2,FUN=mean)
+
+```
+Finding the median
+```{r}
+lapply(data2,FUN=median)
+
+```
+Finding the mode
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+lapply(data,FUN=getmode)
+
+```
+Measures of Dispersion
+
+Minimum
+```{r}
+lapply(data2,FUN=min)
+
+```
+Maximum
+```{r}
+lapply(data2,FUN=max)
+
+```
+Range
+```{r}
+lapply(data2,FUN=range)
+
+```
+Quantile
+```{r}
+lapply(data2,FUN=quantile)
+
+```
+Variance
+```{r}
+lapply(data2,FUN=var)
+
+```
+Standard Deviation
+```{r}
+lapply(data2,FUN=sd)
+
+```
+
+
+
+
+
+## Univariate Graphical
+
+```{r}
+
+
+region_frequency <- table(data$`Region`)
+
+barplot(region_frequency)
+
+```
+From the plot, we can see that majority are from the region 1
+
+
+```{r}
+admin_hist <- table(data$`Administrative`)
+
+hist(admin_hist)
+```
+
+
+```{r}
+info_hist <- table(data$Informational)
+
+hist(info_hist)
+```
+
+
+
+# Bivariate Analysis
+
+
+Finding the covariance between Product related and product duration
+```{r}
+
+prel <- (data$ProductRelated)
+
+
+pdur  <- (data$ProductRelated)
+
+cov(pdur, prel)
+
+```
+
+Finding the covariance between Bounce rates and Exit Rates
+```{r}
+
+brate <- (data$BounceRates)
+
+
+erate <- (data$ExitRates)
+
+cov(brate, erate)
+
+```
+
+
+
+## Graphical Techniques
+
+Scatter plot of the covariance between Bounce rates and Exit Rates
+```{r}
+
+
+plot(erate, brate, xlab="Daily Internet time", ylab="Daily Internet usage")
+
+```
+From the above scatter plot, we can see that there is a positive correlation between bounce rate and Exit rate
+
+
+Scatter plot of the covariance between Product related and Product Duration
+```{r}
+
+
+plot(pdur, prel, xlab="Daily Internet time", ylab="Daily Internet usage")
+
+```
+From the above scatter plot, we can see that there is a positive correlation between Product related and product duration
+
+
+```{r}
+
+data$Month <- as.integer(as.factor(data$Month))
+data$VisitorType <- as.integer(as.factor(data$VisitorType))
+data$Weekend <- as.integer(as.factor(data$Weekend))
+data$Revenue <- as.integer(as.factor(data$Revenue))
+
+```
+
+```{r}
+#Previewing the data set
+head(data)
+```
+```{r}
+data$Revenue <- as.integer(as.factor(data$Revenue))
+```
+
+
+```{r}
+normalize <- function(x){
+  return ((x-min(x)) / (max(x)-min(x)))}
+
+data$Administrative <- normalize(data$Administrative)
+data$Administrative_Duration <- normalize(data$Administrative_Duration)
+data$Informational <- normalize(data$Informational)
+data$Informational_Duration <- normalize(data$Informational_Duration)
+data$ProductRelated <- normalize(data$ProductRelated)
+data$ProductRelated_Duration <- normalize(data$ProductRelated_Duration)
+data$BounceRates <- normalize(data$BounceRates)
+data$ExitRates <- normalize(data$ExitRates)
+data$PageValues <- normalize(data$PageValues)
+data$SpecialDay <- normalize(data$SpecialDay)
+data$OperatingSystems <- normalize(data$OperatingSystems)
+data$Browser <- normalize(data$Browser)
+data$Region <- normalize(data$Region)
+data$TrafficType <- normalize(data$TrafficType)
+```
+
+```{r}
+
+
+
+library(factoextra)
+library(NbClust)
+```
+
+
+```{r}
+fviz_nbclust(data, kmeans, method = "silhouette")
+```
+
+Performing clustering with a k value of 2
+
+```{r}
+
+kmeans_model = kmeans(data, 2)
+
+# Checking the cluster centers for each attribute
+
+kmeans_model$centers
+
+```
+Visualizing Kmeans
+```{r}
+fviz_cluster(kmeans_model, data)
+```
+##Advantages and Disadvantages of K-Means Clustering
+
+###Advantages 
+
+Easy to implement 
+With a large number of variables, K-Means may be computationally faster than hierarchical clustering (if K is small). 
+k-Means may produce Highter clusters than hierarchical clustering 
+An instance can change cluster (move to another cluster) when the centroids are recomputed. 
+
+###Disadvantages 
+Difficult to predict the number of clusters (K-Value) 
+Initial seeds have a strong impact on the final results 
+The order of the data has an impact on the final results 
+Sensitive to scale: rescaling your datasets (normalization or standardization) will completely change results. 
+
+
+
+# Hierarchical Clust
+```{r}
+data3 <- dist(data, method = "euclidean")
+```
+
+```{r}
+res.hc <- hclust(data3, method = "ward.D2" )
+```
+
+```{r}
+plot(res.hc, cex = 0.6, hang = -1)
+```   
+
+## The three main advantages of using the Hierarchical clustering techniques are as follows;
+
+We do not need to specify the number of clusters required for the algorithm.
+Hierarchical clustering outputs a hierarchy, ie a structure that is more informative than the unstructured set of flat clusters returned by k-means.
+It is also easy to implement.
+Below are the limitations of the hierarchical clustering technique;
+
+## There is no mathematical objective for Hierarchical clustering.
+All the approaches to calculate the similarity between clusters has its own disadvantages.
+High space and time complexity for Hierarchical clustering. Hence this clustering algorithm cannot be used when we have huge data.
+
+# Challenging the solution
+There are a few challenges that come along while working with the K-means clustering algorithm. One of those challenges is that it makes clusters of the same size. The other challenge is that it decides the number of clusters at the beginning of the algorithm and thus we would not know how many clusters we should have while working with the algorithm. 
+Therefore, Hierarchical Clustering is the best option 
+

@@ -1,0 +1,333 @@
+---
+title: "IPweek12"
+author: "Alex"
+date: "02/07/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+# A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. She would now like to employ your services as a Data Science Consultant to help her identify which individuals are most likely to click on her ads. 
+
+IMPORTING OUR DATASET
+```{r}
+
+library("data.table")
+data <- fread("http://bit.ly/IPAdvertisingData")
+```
+
+Preview of the data set
+```{r}
+head(data)
+
+```
+
+
+Checking data types
+```{r}
+typeof(data)
+
+```
+
+Checking the data shape of our data set
+```{r}
+nrow(data)
+
+
+ncol(data)
+
+#From our data set, we can see that we have a total of 1000 rows and a total of 10 columns.
+
+```
+Checking for missing values
+```{r}
+
+colSums(is.na(data))
+
+#When we check for null values in each column, we can see that there are no missing values in our data set.
+
+
+```
+
+Checking for duplicates
+```{r}
+duplicated_rows <- data[duplicated(data),]
+
+duplicated_rows 
+
+#From the above code, we can clearly see the output which shows that there are no duplicates in our data set.
+
+
+```
+
+Checking for Outliers
+```{r}
+#creating a variable with only numeric columns
+library(tidyverse)
+data2 <-data %>% select(1,2,3,4,7,10)
+
+#Previewing outliers for numeric columns using box plots
+boxplot(data2)
+```
+From the box plot above, we can conclude that there aren't any outliers in our given data set
+
+
+
+
+
+
+# Exploratory Data Analysis
+
+## Univariate Analysis
+
+
+Finding the mean
+```{r}
+lapply(data2,FUN=mean)
+
+```
+Finding the median
+```{r}
+lapply(data2,FUN=median)
+
+```
+Finding the mode
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+lapply(data,FUN=getmode)
+
+```
+Measures of Dispersion
+
+Minumum
+```{r}
+lapply(data2,FUN=min)
+
+```
+Maximum
+```{r}
+lapply(data2,FUN=max)
+
+```
+Range
+```{r}
+lapply(data2,FUN=range)
+
+```
+Quantile
+```{r}
+lapply(data2,FUN=quantile)
+
+```
+Variance
+```{r}
+lapply(data2,FUN=var)
+
+```
+Standard Deviation
+```{r}
+lapply(data2,FUN=sd)
+
+```
+
+
+
+
+
+## Univariate Graphical
+
+```{r}
+
+
+age_frequency <- table(data$`Age`)
+
+barplot(age_frequency)
+
+```
+
+```{r}
+age_hist <- table(data$`Age`)
+
+hist(age_hist)
+```
+
+
+```{r}
+time_hist <- table(data$`Daily Time Spent on Site`)
+
+hist(time_hist)
+```
+
+
+
+# Bivariate Analysis
+
+
+
+
+
+
+Finding the covariance between internet Usage and internet time
+```{r}
+
+time <- (data$`Daily Time Spent on Site`)
+
+
+usage  <- (data$`Daily Internet Usage`)
+
+cov(time, usage)
+
+```
+## Graphical Techniques
+
+Scatter plot of Daily Internet usage and Daily internet time spent
+```{r}
+
+
+plot(time, usage, xlab="Daily Internet time", ylab="Daily Internet usage")
+
+```
+From the above scatter plot, we can see that there is a positive correlation between daily time spent and daily internet usage
+
+
+Scatter plot of age and Area income
+```{r}
+
+age <- (data$Age)
+
+
+income  <- (data$`Area Income`)
+
+plot(age, income, xlab="Age", ylab="Area income")
+
+
+
+```
+From the graph above, we can see that there is no correlation between age and area income
+
+
+
+Scatter plot of age and Daily internet time spent
+```{r}
+
+
+plot(age, time, xlab="Age", ylab="Daily Internet time")
+
+
+
+```
+
+From the above plot, we can see no correlation between Age and duration of time spent daily on the internet.
+
+```{r}
+
+
+ad <- (data$`Clicked on Ad`)
+
+
+country  <- (data$Country)
+
+plot(ad, age, xlab="ads", ylab="Age")
+
+```
+From the plot above, we can see that people from all age end up clicking on the ads. We can also see that people who click on ads are also from the age of 50-60.
+
+```{r}
+
+
+ad <- (data$`Clicked on Ad`)
+
+
+male  <- (data$Male)
+
+plot(ad, male, xlab="ads", ylab="male")
+
+```
+From the plot, we can see that gender isn't a factor that affects whether people click on ads or not.  
+
+
+```{r}
+
+
+
+
+plot(ad, time, xlab="ads", ylab="Daily time spent")
+
+```
+From the plot we can see that majority of the people who click on ads are the ones who spend most time  daily on the internet.
+
+# Decision trees
+```{r}
+
+
+library(rpart)
+library(rpart.plot)
+library(mlbench)
+library(caret)
+```
+
+```{r}
+# Defining features and target variables
+
+library(tidyverse)
+ad <-data %>% select(1,2,3,4,7,10)
+add <-data %>% select(10)
+
+head(ad)
+```
+```{r}
+
+ad$Country <- as.integer(as.factor(ad$Country))
+```
+
+
+```{r}
+data_train <- ad[1:800, ]
+data_test <- ad[801:1000,]
+```
+```{r}
+
+dim(ad)
+```
+
+
+```{r}
+head(ad)
+```
+
+
+
+```{r}
+
+
+model <- rpart(`Clicked on Ad`~., data = data_train, method = 'class')
+rpart.plot(model)
+
+# Visualizing the model
+
+rpart.plot(model)
+```
+
+
+
+
+
+
+
+# Conclusion
+
+From the graphs above we can conclude that majority of the people who will click on the ads are the ones who spend more time on the internet, are from all ages including the age from 50-60 and use more internet usage since it has a positive correlation with daily internet time.
+
+
+# Recommendations
+The company should target people from all age mostly from the age of 50-60 maybe by adverting something close to what that age group may like. The company should focus less on gender and more on people who spend more daily internet time maybe by giving free internet usage on clicking the ads.
+
+
+
+
+
+
+
